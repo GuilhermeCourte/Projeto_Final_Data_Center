@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pitch · Monitoramento Inteligente de Data Center · CloudTech</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#ffffff; --bg-1:#ffffff; --bg-2:#f9fafb;
+    --surface:#ffffff;
+    --surface-2:#f3f4f6;
+    --border:#e5e7eb;
+    --border-strong:#d1d5db;
+    --text:#111827; --muted:#4b5563; --faint:#9ca3af;
+    --cyan:#3b82f6; --cyan-2:#2563eb;
+    --indigo:#4f46e5; --violet:#6366f1;
+    --green:#10b981; --amber:#f59e0b; --red:#ef4444;
+    --shadow:0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --shadow-lg:0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+    --mono:'JetBrains Mono','Consolas','Courier New',monospace;
+    --sans:'Inter',system-ui,-apple-system,sans-serif;
+    --r:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:var(--sans); color:var(--text); overflow:hidden;
+    background:var(--bg-0);
+  }
+  /* subtle dotted grid */
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:1;
+    background-image:radial-gradient(var(--border-strong) 1px, transparent 1px);
+    background-size:32px 32px;
+    mask-image:radial-gradient(ellipse at 50% 50%, #000 40%, transparent 90%);
+    -webkit-mask-image:radial-gradient(ellipse at 50% 50%, #000 40%, transparent 90%);
+  }
+
+  /* ---------- Deck / slides ---------- */
+  .deck{position:fixed; inset:0; z-index:1}
+  .slide{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    justify-content:center; align-items:center;
+    padding:clamp(28px,5vw,90px); opacity:0; visibility:hidden;
+    transform:translateX(100%);
+    transition:opacity .55s cubic-bezier(.45,.05,.2,1), transform .55s cubic-bezier(.45,.05,.2,1), visibility .55s;
+    overflow:auto;
+  }
+  .slide.is-active{opacity:1; visibility:visible; transform:translateX(0)}
+  .slide.is-prev{opacity:0; visibility:hidden; transform:translateX(-100%)}
+  .inner{width:100%; max-width:1160px; margin:auto}
+
+  /* ---------- Typography / atoms ---------- */
+  .kicker{
+    display:inline-flex; align-items:center; gap:10px; font-family:var(--mono);
+    font-size:clamp(11px,1.1vw,13px); letter-spacing:.22em; text-transform:uppercase;
+    color:var(--cyan-2); margin-bottom:18px; font-weight:700;
+  }
+  .kicker::before{content:""; width:26px; height:2px; background:linear-gradient(90deg,var(--cyan),transparent)}
+  .kicker .n{color:var(--faint); font-weight:400}
+  h1{font-size:clamp(30px,5vw,62px); line-height:1.04; letter-spacing:-.03em; font-weight:800}
+  h2{font-size:clamp(24px,3.6vw,44px); line-height:1.08; letter-spacing:-.03em; font-weight:800; margin-bottom:6px}
+  .lead{color:var(--muted); font-size:clamp(15px,1.7vw,20px); line-height:1.5; max-width:60ch; font-weight:400}
+  .grad{background:linear-gradient(90deg,var(--cyan-2),var(--indigo)); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .muted{color:var(--muted)} .faint{color:var(--faint)}
+  b,strong{color:var(--text); font-weight:700}
+  .mono{font-family:var(--mono)}
+
+  .icon{width:1em;height:1em;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .ico-badge{
+    display:grid;place-items:center;width:46px;height:46px;border-radius:13px;font-size:22px;
+    background:var(--surface);border:1px solid var(--border);color:var(--cyan-2);flex:none;
+    box-shadow:var(--shadow);
+  }
+
+  .card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--r);
+    padding:clamp(16px,1.6vw,22px); box-shadow:var(--shadow);
+  }
+  .card.hl{border-color:var(--cyan-2); box-shadow:0 0 0 1px var(--cyan-2), var(--shadow-lg)}
+  .grid{display:grid; gap:clamp(12px,1.4vw,18px)}
+  .chip{
+    display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;
+    background:var(--surface);border:1px solid var(--border);font-size:13px;color:var(--muted);
+    box-shadow:var(--shadow); font-weight:500;
+  }
+  .chip .icon{font-size:15px;color:var(--cyan-2)}
+  .tag{font-family:var(--mono);font-size:12px;padding:4px 9px;border-radius:7px;background:#eff6ff;
+       border:1px solid #bfdbfe;color:var(--cyan-2); font-weight:700;}
+  .pill{font-family:var(--mono);font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--border); font-weight:700;}
+  .pill.g{color:var(--green);border-color:#a7f3d0;background:#ecfdf5}
+  .pill.a{color:var(--amber);border-color:#fde68a;background:#fffbeb}
+  .pill.r{color:var(--red);border-color:#fecaca;background:#fef2f2}
+
+  pre.code{
+    font-family:var(--mono); font-size:clamp(11.5px,1.15vw,14px); line-height:1.6;
+    background:#f8fafc; border:1px solid var(--border); border-radius:14px;
+    padding:16px 18px; overflow:auto; color:#334155; box-shadow:var(--shadow);
+  }
+  .code .k{color:#2563eb;font-weight:700}.code .s{color:#16a34a}.code .n{color:#ea580c}.code .c{color:#94a3b8;font-style:italic}.code .f{color:#7c3aed}
+
+  /* ---------- Cover ---------- */
+  .cover .inner{max-width:1000px;text-align:left}
+  .cover .badge-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:26px}
+  .cover h1{margin:6px 0 18px}
+  .pulse{position:relative;display:inline-grid;place-items:center;width:64px;height:64px;border-radius:18px;
+    background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-lg)}
+  .pulse svg{width:32px;height:32px;color:var(--cyan-2)}
+  .pulse::after{content:"";position:absolute;inset:-6px;border-radius:24px;border:2px solid var(--cyan-2);animation:ring 2.6s ease-out infinite}
+  @keyframes ring{0%{transform:scale(.85);opacity:.6}100%{transform:scale(1.35);opacity:0}}
+  .cover-meta{display:flex;gap:30px;flex-wrap:wrap;margin-top:30px;color:var(--muted);font-size:14px}
+  .cover-meta b{display:block;color:var(--text);font-size:15px; font-weight:600;}
+  .cover-meta .l{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+
+  /* ---------- Agenda ---------- */
+  .agenda{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:34px}
+  .agenda .step{position:relative;padding:22px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--border);overflow:hidden; box-shadow:var(--shadow)}
+  .agenda .step .num{font-family:var(--mono);font-size:13px;color:var(--cyan-2); font-weight:700}
+  .agenda .step .ic{font-size:30px;margin:14px 0 12px;color:var(--text);display:block}
+  .agenda .step h3{font-size:16px;font-weight:700}
+  .agenda .step p{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.45}
+  .agenda .step::before{content:"";position:absolute;left:0;top:0;width:100%;height:3px;background:linear-gradient(90deg,var(--cyan-2),var(--indigo))}
+
+  /* ---------- Problem ---------- */
+  .prob{display:grid;grid-template-columns:1.05fr .95fr;gap:26px;align-items:center}
+  .timeline{position:relative;padding-left:26px}
+  .timeline::before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:linear-gradient(var(--border-strong),var(--red))}
+  .tl{position:relative;margin-bottom:16px}
+  .tl::before{content:"";position:absolute;left:-26px;top:4px;width:14px;height:14px;border-radius:50%;background:var(--surface);border:2px solid var(--border-strong)}
+  .tl.bad::before{border-color:var(--red);box-shadow:0 0 0 4px #fee2e2}
+  .tl h4{font-size:15px; font-weight:600} .tl p{font-size:13px;color:var(--muted)}
+  .bigstat{text-align:center;padding:30px 18px;border-radius:20px;background:#ffffff;border:1px solid #fecaca;box-shadow:var(--shadow-lg)}
+  .bigstat .v{font-size:clamp(52px,8vw,84px);font-weight:800;line-height:1;color:var(--text)}
+  .bigstat .v span{color:var(--red)}
+  .bigstat .l{color:var(--muted);margin-top:8px;font-size:14px}
+  .stat-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+  .stat-row .s{padding:14px;border-radius:13px;background:var(--surface);border:1px solid var(--border);text-align:center;box-shadow:var(--shadow)}
+  .stat-row .s b{font-size:22px;display:block;font-weight:800} .stat-row .s span{font-size:12px;color:var(--muted)}
+
+  /* ---------- Architecture flow ---------- */
+  .flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:stretch;gap:10px;margin-top:26px}
+  .node{padding:20px;border-radius:18px;background:var(--surface);border:1px solid var(--border);text-align:center;box-shadow:var(--shadow)}
+  .node.edge{border-top:3px solid var(--cyan-2)} .node.cloud{border-top:3px solid var(--indigo)}
+  .node .ic{font-size:34px;display:block;margin-bottom:10px}
+  .node h3{font-size:17px;font-weight:700} .node .sub{font-size:12px;color:var(--faint);font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+  .node ul{list-style:none;margin-top:12px;display:grid;gap:7px}
+  .node li{font-size:12.5px;color:var(--muted);display:flex;gap:7px;align-items:center;justify-content:center}
+  .node li .icon{color:var(--cyan-2);font-size:14px}
+  .conn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-width:90px}
+  .conn .lbl{font-size:10.5px;font-family:var(--mono);color:var(--cyan-2);text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+  .conn .lbl.down{color:var(--violet)}
+  .arrow{width:100%;height:2px;background:var(--cyan-2);position:relative}
+  .arrow::after{content:"";position:absolute;right:0;top:-4px;border:5px solid transparent;border-left-color:var(--cyan-2)}
+  .arrow.rev{background:var(--violet)}
+  .arrow.rev::after{right:auto;left:0;border-left-color:transparent;border-right-color:var(--violet)}
+  .dataflow{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+  .topicbar{flex:1;min-width:240px;display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow)}
+  .topicbar .dir{font-family:var(--mono);font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+  .topicbar code{font-family:var(--mono);font-size:13.5px;color:var(--cyan-2);font-weight:700}
+
+  /* ---------- Lanes (data flow) ---------- */
+  .lanes{display:grid;gap:14px;margin-top:24px}
+  .lane{display:grid;grid-template-columns:190px 1fr;gap:18px;align-items:center;padding:16px 18px;border-radius:16px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow)}
+  .lane .head{display:flex;gap:12px;align-items:center}
+  .lane .head .ic{font-size:26px}
+  .lane .head h4{font-size:15px;font-weight:700} .lane .head .t{font-size:11px;color:var(--faint);font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+  .steps{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .steps .st{font-size:12.5px;color:var(--text);font-weight:500;background:var(--surface-2);border:1px solid var(--border);padding:8px 12px;border-radius:10px;white-space:nowrap}
+  .steps .sep{color:var(--border-strong);font-size:14px}
+  .lane.l1{border-left:4px solid var(--cyan-2)} .lane.l2{border-left:4px solid var(--violet)} .lane.l3{border-left:4px solid var(--green)}
+
+  /* ---------- Stack grid ---------- */
+  .stack{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:24px}
+  .tech{padding:18px;border-radius:16px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow)}
+  .tech .top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .tech .ic{font-size:24px;color:var(--cyan-2)}
+  .tech h4{font-size:15px;font-weight:700} .tech .role{font-size:11px;color:var(--faint);font-family:var(--mono);font-weight:700}
+  .tech p{font-size:12.5px;color:var(--muted);line-height:1.5}
+  .tech p b{color:var(--text);font-weight:600}
+
+  /* ---------- Edge split ---------- */
+  .split{display:grid;grid-template-columns:1fr 1.05fr;gap:24px;align-items:start;margin-top:22px}
+  .feat{display:flex;gap:14px;margin-bottom:16px}
+  .feat .ico-badge{width:42px;height:42px;font-size:20px;box-shadow:none;background:var(--surface-2);border:none}
+  .feat h4{font-size:16px;font-weight:700} .feat p{font-size:13px;color:var(--muted);line-height:1.5;margin-top:3px}
+
+  /* ---------- Dashboard demo ---------- */
+  #demo { padding-top: clamp(10px, 2vw, 30px); padding-bottom: clamp(10px, 2vw, 30px); }
+  #demo h2 { margin-bottom: 0px; font-size: clamp(22px, 3.2vw, 38px); }
+  #demo .kicker { margin-bottom: 8px; }
+  #demo p.muted { margin-bottom: 4px !important; font-size: 12.5px !important; }
+  .dash{display:grid;grid-template-columns:1.45fr 1fr;gap:12px;margin-top:8px;height:min-content}
+  .panel{background:#ffffff;border:1px solid var(--border);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow-lg)}
+  .panel .ptitle{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-bottom:2px;display:flex;align-items:center;gap:6px;font-weight:700}
+  .gauge-wrap{display:flex;flex-direction:column;align-items:center}
+  .readout{margin-top:-34px;text-align:center}
+  .readout .t{font-size:38px;font-weight:800;font-family:var(--mono);line-height:1}
+  .readout .t small{font-size:16px;color:var(--muted)}
+  .gauges{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
+  .gauge-unit{display:flex;flex-direction:column;align-items:center;min-width:0}
+  .gauges .ptitle{justify-content:center;width:100%;text-align:center}
+  .gauges .gauge-wrap{width:100%}
+  .gauges .readout{margin-top:2px}
+  .gauges .readout .t{font-size:34px}
+  .gauges .statuspill{margin-top:8px}
+  .gauges .legend{gap:12px;font-size:10.5px;margin-top:8px}
+  .statuspill{margin-top:6px;display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;padding:4px 12px;border-radius:999px;border:1px solid var(--border);font-weight:700}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--faint);transition:.3s}
+  .right-col{display:grid;grid-template-rows:auto 1fr auto;gap:10px}
+  .ind-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .ind{padding:10px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow)}
+  .ind .l{font-size:10px;color:var(--muted);display:flex;gap:6px;align-items:center;font-weight:600;text-transform:uppercase}
+  .ind .v{font-size:22px;font-weight:800;font-family:var(--mono);margin-top:2px}
+  .led{display:flex;align-items:center;gap:8px;margin-top:2px}
+  .ledball{width:14px;height:14px;border-radius:50%;background:#e2e8f0;transition:.3s}
+  .ledball.on{background:var(--red);box-shadow:0 0 10px 2px rgba(239,68,68,.5)}
+  .chartbox{padding:8px 12px}
+  .chart-plot{position:relative;height:110px;margin-top:2px}
+  .chart-plot svg{width:100%;height:100%;display:block}
+  .thr-tag{position:absolute;left:6px;top:34px;transform:translateY(-50%);font-family:var(--mono);font-size:10px;font-weight:700;color:var(--red);background:var(--surface);padding:0 5px;border-radius:5px;pointer-events:none;transition:top .25s linear,opacity .2s}
+  .log{height:80px;overflow:hidden;font-family:var(--mono);font-size:10.5px;display:flex;flex-direction:column;gap:4px}
+  .log .row{display:flex;gap:9px;align-items:flex-start;color:var(--muted);opacity:0;transform:translateY(-4px);animation:logIn .4s forwards}
+  .log .row time{color:var(--faint);flex:none;font-weight:700}
+  .log .row.auto b{color:var(--red)} .log .row.man b{color:var(--cyan-2)} .log .row.ok b{color:var(--green)}
+  @keyframes logIn{to{opacity:1;transform:none}}
+  .legend{display:flex;gap:16px;justify-content:center;margin-top:10px;font-size:11.5px;color:var(--muted);font-weight:500}
+  .legend i{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:6px}
+
+  /* ---------- Demo control bar (MQTT ao vivo) ---------- */
+  .demo-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:2px 0 8px}
+  .seg{display:inline-flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface);box-shadow:var(--shadow)}
+  .seg-btn{font-family:var(--sans);font-size:12px;font-weight:700;padding:8px 13px;border:0;background:transparent;color:var(--muted);cursor:pointer;transition:.2s}
+  .seg-btn:hover{background:var(--surface-2)}
+  .seg-btn.is-on{background:var(--cyan-2);color:#fff}
+  .connstat{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;font-weight:700;padding:6px 12px;border-radius:999px;border:1px solid var(--amber);color:var(--amber)}
+  .connstat .cdot{width:8px;height:8px;border-radius:50%;background:var(--amber);transition:.3s}
+  .exa-btn{margin-left:auto;font-family:var(--sans);font-size:13px;font-weight:700;padding:9px 18px;border-radius:10px;border:0;cursor:pointer;background:var(--cyan-2);color:#fff;box-shadow:var(--shadow);transition:.15s}
+  .exa-btn:hover{filter:brightness(1.07)}
+  .exa-btn:active{transform:translateY(1px)}
+  .exa-btn.on{background:var(--red)}
+  .open-link{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--cyan-2);text-decoration:none;padding:7px 11px;border-radius:9px;border:1px dashed var(--border-strong);transition:.2s}
+  .open-link:hover{background:var(--surface-2);border-color:var(--cyan-2)}
+  .sliders{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 8px;padding:11px 16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow)}
+  .sld{flex:1;min-width:220px;display:flex;flex-direction:column;gap:7px}
+  .sld-l{font-size:12px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:7px;text-transform:uppercase;letter-spacing:.04em}
+  .sld-l .icon{font-size:15px;color:var(--cyan-2)}
+  .sld-l b{margin-left:auto;font-family:var(--mono);color:var(--text);font-weight:800;font-size:13px;text-transform:none}
+  .sld input[type=range]{width:100%;height:6px;cursor:pointer;accent-color:var(--cyan-2)}
+
+  /* ---------- Security / scalability ---------- */
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:22px}
+  .col h3{display:flex;align-items:center;gap:12px;font-size:18px;margin-bottom:14px;font-weight:700}
+  .col h3 .ico-badge{width:40px;height:40px;font-size:19px;box-shadow:none;border:none;background:var(--surface-2)}
+  .li{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
+  .li:last-child{border-bottom:0}
+  .li .icon{color:var(--cyan-2);font-size:18px;flex:none;margin-top:2px}
+  .li b{font-size:14px;color:var(--text);font-weight:600} .li p{font-size:12.5px;color:var(--muted);line-height:1.45;margin-top:2px}
+  .col.scl .li .icon{color:var(--violet)}
+
+  /* ---------- Criteria ---------- */
+  .crit{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:26px}
+  .crit .c{padding:20px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--border);position:relative;box-shadow:var(--shadow)}
+  .crit .c .check{position:absolute;top:14px;right:14px;color:var(--green);font-size:20px}
+  .crit .c .ic{font-size:28px;color:var(--cyan-2);margin-bottom:12px}
+  .crit .c h4{font-size:15px;font-weight:700} .crit .c p{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.45}
+
+  /* ---------- Closing ---------- */
+  .closing{text-align:center}
+  .closing .inner{max-width:880px}
+  .closing h1{margin:14px 0}
+  .impact{display:flex;gap:18px;justify-content:center;align-items:center;margin:30px 0;flex-wrap:wrap}
+  .impact .b{padding:18px 26px;border-radius:16px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow)}
+  .impact .b .v{font-size:34px;font-weight:800} .impact .b .l{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase}
+  .impact .ar{font-size:28px;color:var(--border-strong)}
+
+  /* ---------- HUD ---------- */
+  .progress{position:fixed;top:0;left:0;right:0;height:4px;background:var(--surface-2);z-index:20}
+  .progress__bar{height:100%;width:0;background:linear-gradient(90deg,var(--cyan-2),var(--indigo));transition:width .5s ease}
+  .hud{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;align-items:center;justify-content:center;
+       padding:14px clamp(18px,3vw,42px);font-size:12.5px;color:var(--muted);pointer-events:none}
+  .hud>*{pointer-events:auto}
+  .hud__nav{display:flex;align-items:center;gap:10px}
+  .counter{font-family:var(--mono);font-weight:700} .counter b{color:var(--text)}
+  .navbtn{width:34px;height:34px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--text);
+          font-size:17px;cursor:pointer;transition:.2s;display:grid;place-items:center;box-shadow:var(--shadow)}
+  .navbtn:hover{background:var(--surface-2);border-color:var(--border-strong);color:var(--cyan-2)}
+  @media (max-width:720px){
+    .agenda,.stack,.crit{grid-template-columns:repeat(2,1fr)}
+    .prob,.split,.dash,.twocol,.flow,.gauges{grid-template-columns:1fr}
+    .flow .conn{flex-direction:row;min-height:54px}
+    .lane{grid-template-columns:1fr}
+  }
+
+  /* ---------- Print → PDF ---------- */
+  @media print{
+    body{overflow:visible;background:#ffffff}
+    .slide{position:relative;opacity:1!important;visibility:visible!important;transform:none!important;page-break-after:always;height:100vh}
+    .hud,.progress{display:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ SVG ICON SPRITE ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-server" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+    <symbol id="i-activity" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></symbol>
+    <symbol id="i-thermo" viewBox="0 0 24 24"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></symbol>
+    <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+    <symbol id="i-wind" viewBox="0 0 24 24"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+    <symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></symbol>
+    <symbol id="i-droplet" viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-trend" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></symbol>
+    <symbol id="i-radio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></symbol>
+  </defs>
+</svg>
+
+<div class="progress"><div class="progress__bar" id="pbar"></div></div>
+
+<div class="deck" id="deck">
+
+  <!-- ===== 1 · COVER ===== -->
+  <section class="slide cover is-active">
+    <div class="inner">
+      <div class="badge-row">
+        <span class="tag">Cloud Computing &amp; IoT</span>
+        <span class="chip"><svg class="icon"><use href="#i-target"/></svg> Trabalho Final de Curso</span>
+        <span class="chip"><svg class="icon"><use href="#i-radio"/></svg> Defesa Técnica · Pitch</span>
+      </div>
+      <div class="pulse"><svg viewBox="0 0 24 24" class="icon"><use href="#i-server"/></svg></div>
+      <h1 style="margin-top:18px">Monitoramento Inteligente de<br><span class="grad">Data Center com IoT &amp; Cloud</span></h1>
+      <p class="lead">Edge Computing, telemetria em tempo real e controle remoto para eliminar o risco de <b>downtime térmico</b> em racks operados remotamente.</p>
+      <div class="cover-meta">
+        <div><span class="l">Cliente</span><b>CloudTech Solutions</b></div>
+        <div><span class="l">Stack</span><b>ESP32 · MQTT · Node-RED</b></div>
+        <div><span class="l">Grupo / Integrantes</span><b>Cavaleiros / Evander Maik, Gabriel Felicidade, Guilherme Courte, Marcos Vinicios</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 2 · AGENDA ===== -->
+  <section class="slide">
+    <div class="inner">
+      <span class="kicker">Roteiro do Pitch <span class="n">· 5 tópicos</span></span>
+      <h2>O que vamos defender hoje</h2>
+      <p class="lead">Uma defesa técnica concisa, do problema operacional à demonstração ao vivo do ecossistema.</p>
+      <div class="agenda">
+        <div class="step"><span class="num">01</span><svg class="icon ic"><use href="#i-alert"/></svg><h3>Problema</h3><p>O incidente térmico e o custo da ausência de monitoramento.</p></div>
+        <div class="step"><span class="num">02</span><svg class="icon ic"><use href="#i-layers"/></svg><h3>Arquitetura</h3><p>Fluxo de dados ponta a ponta: Edge → Nuvem.</p></div>
+        <div class="step"><span class="num">03</span><svg class="icon ic"><use href="#i-cpu"/></svg><h3>Stack</h3><p>Justificativa técnica de cada ferramenta e protocolo.</p></div>
+        <div class="step"><span class="num">04</span><svg class="icon ic"><use href="#i-activity"/></svg><h3>Demonstração</h3><p>Validação em tempo real no simulador e no dashboard.</p></div>
+        <div class="step"><span class="num">05</span><svg class="icon ic"><use href="#i-shield"/></svg><h3>Segurança &amp; Escala</h3><p>Modelo de segurança e evolução industrial.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 3 · PROBLEMA ===== -->
+  <section class="slide">
+    <div class="inner">
+      <span class="kicker">Tópico 01 <span class="n">— Problema</span></span>
+      <h2>Um silêncio que custou <span class="grad">4 horas de operação</span></h2>
+      <div class="prob">
+        <div>
+          <p class="lead" style="margin-bottom:22px">A CloudTech mantém um rack em unidade remota, <b>sem monitoramento presencial nem suporte 24/7</b>. Quando a climatização falhou, ninguém soube.</p>
+          <div class="timeline">
+            <div class="tl"><h4>Operação normal</h4><p>Rack funcionando, climatização ativa, sem telemetria.</p></div>
+            <div class="tl bad"><h4>Falha do ar-condicionado</h4><p>Temperatura sobe gradativamente — <b>nenhum alerta é emitido</b>.</p></div>
+            <div class="tl bad"><h4>Thermal shutdown</h4><p>Servidor principal desliga automaticamente por superaquecimento.</p></div>
+            <div class="tl bad"><h4>Descoberta tardia</h4><p>Problema só percebido presencialmente — prejuízo já consolidado.</p></div>
+          </div>
+        </div>
+        <div>
+          <div class="bigstat">
+            <div class="v"><span>4h</span></div>
+            <div class="l">de <b>downtime</b> e prejuízo financeiro severo</div>
+          </div>
+          <div class="stat-row">
+            <div class="s"><b style="color:var(--red)">0</b><span>alertas emitidos</span></div>
+            <div class="s"><b style="color:var(--amber)">24/7</b><span>sem presença técnica</span></div>
+          </div>
+          <div class="card" style="margin-top:14px;border-color:var(--cyan-2)">
+            <div style="display:flex;gap:10px;align-items:center"><svg class="icon" style="font-size:18px;color:var(--cyan-2)"><use href="#i-target"/></svg><b>Objetivo</b></div>
+            <p class="muted" style="font-size:13px;margin-top:6px">Evitar reincidências com monitoramento automatizado, Edge Computing e controle remoto em tempo real.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 4 · ARQUITETURA ===== -->
+  <section class="slide">
+    <div class="inner">
+      <span class="kicker">Tópico 02 <span class="n">— Arquitetura</span></span>
+      <h2>Arquitetura em camadas, <span class="grad">do sensor à nuvem</span></h2>
+      <div class="flow">
+        <div class="node edge">
+          <svg class="icon ic" style="color:var(--cyan-2)"><use href="#i-cpu"/></svg>
+          <span class="sub">Edge Device</span>
+          <h3>ESP32</h3>
+          <ul>
+            <li><svg class="icon"><use href="#i-thermo"/></svg> Sensor DHT22</li>
+            <li><svg class="icon"><use href="#i-wind"/></svg> Relé + LED (exaustor)</li>
+            <li><svg class="icon"><use href="#i-zap"/></svg> Lógica autônoma local</li>
+          </ul>
+        </div>
+        <div class="conn">
+          <span class="lbl">Telemetria ▸</span>
+          <div class="arrow"></div>
+          <div class="arrow rev"></div>
+          <span class="lbl down">◂ Comando</span>
+        </div>
+        <div class="node">
+          <svg class="icon ic" style="color:var(--green)"><use href="#i-radio"/></svg>
+          <span class="sub">Comunicação</span>
+          <h3>MQTT</h3>
+          <ul>
+            <li><svg class="icon"><use href="#i-send"/></svg> Pub/Sub leve</li>
+            <li><svg class="icon"><use href="#i-lock"/></svg> Autenticação user/senha</li>
+            <li><svg class="icon"><use href="#i-cloud"/></svg> Broker HiveMQ</li>
+          </ul>
+        </div>
+        <div class="conn">
+          <div class="arrow"></div>
+          <div class="arrow rev"></div>
+        </div>
+        <div class="node cloud">
+          <svg class="icon ic" style="color:var(--indigo)"><use href="#i-cloud"/></svg>
+          <span class="sub">Gestão / Nuvem</span>
+          <h3>Node-RED</h3>
+          <ul>
+            <li><svg class="icon"><use href="#i-grid"/></svg> Dashboard em tempo real</li>
+            <li><svg class="icon"><use href="#i-activity"/></svg> Gauge, gráfico &amp; log</li>
+            <li><svg class="icon"><use href="#i-wind"/></svg> Controle manual remoto</li>
+          </ul>
+        </div>
+      </div>
+      <div class="dataflow">
+        <div class="topicbar"><svg class="icon" style="font-size:18px;color:var(--cyan-2)"><use href="#i-send"/></svg><div><div class="dir">Publish · dispositivo → nuvem</div><code>cloudtech/datacenter/monitor</code></div></div>
+        <div class="topicbar"><svg class="icon" style="font-size:18px;color:var(--violet)"><use href="#i-radio"/></svg><div><div class="dir">Subscribe · nuvem → dispositivo</div><code>cloudtech/datacenter/cmd</code></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 5 · FLUXO DE DADOS ===== -->
+  <section class="slide">
+    <div class="inner">
+      <span class="kicker">Tópico 02 <span class="n">— Fluxo de dados ponta a ponta</span></span>
+      <h2>Três caminhos, <span class="grad">um ecossistema</span></h2>
+      <div class="lanes">
+        <div class="lane l1">
+          <div class="head"><svg class="icon ic" style="color:var(--cyan-2)"><use href="#i-send"/></svg><div><div class="t">Caminho 1</div><h4>Telemetria</h4></div></div>
+          <div class="steps">
+            <span class="st">DHT22 lê a cada 5 s</span><span class="sep">▸</span>
+            <span class="st">ESP32 monta JSON</span><span class="sep">▸</span>
+            <span class="st">publish <code class="mono" style="color:var(--cyan-2)">monitor</code></span><span class="sep">▸</span>
+            <span class="st">Node-RED assina</span><span class="sep">▸</span>
+            <span class="st">Dashboard atualiza</span>
+          </div>
+        </div>
+        <div class="lane l2">
+          <div class="head"><svg class="icon ic" style="color:var(--violet)"><use href="#i-radio"/></svg><div><div class="t">Caminho 2</div><h4>Controle</h4></div></div>
+          <div class="steps">
+            <span class="st">Botão no Dashboard</span><span class="sep">▸</span>
+            <span class="st">publish <code class="mono" style="color:var(--violet)">cmd</code> (ON/OFF)</span><span class="sep">▸</span>
+            <span class="st">ESP32 (assinante)</span><span class="sep">▸</span>
+            <span class="st">aciona relé <b>instantaneamente</b></span>
+          </div>
+        </div>
+        <div class="lane l3">
+          <div class="head"><svg class="icon ic" style="color:var(--green)"><use href="#i-zap"/></svg><div><div class="t">Caminho 3</div><h4>Edge / Autônomo</h4></div></div>
+          <div class="steps">
+            <span class="st">DHT22 detecta T &gt; 28 °C</span><span class="sep">▸</span>
+            <span class="st">decisão <b>local</b> no ESP32</span><span class="sep">▸</span>
+            <span class="st">liga exaustor sem a nuvem</span><span class="sep">▸</span>
+            <span class="st">registra evento</span>
+          </div>
+        </div>
+      </div>
+      <p class="muted" style="font-size:13px;margin-top:18px;display:flex;gap:9px;align-items:center"><svg class="icon" style="font-size:16px;color:var(--cyan-2)"><use href="#i-check"/></svg> O JSON trafega com as chaves exatas esperadas pelo fluxo: <code class="mono" style="color:var(--cyan-2)">temperatura</code>, <code class="mono" style="color:var(--cyan-2)">umidade</code>, <code class="mono" style="color:var(--cyan-2)">exaustor</code>.</p>
+    </div>
+  </section>
+
+  <!-- ===== 6 · STACK ===== -->
+  <section class="slide">
+    <div class="inner">
+      <span class="kicker">Tópico 03 <span class="n">— Stack Tecnológica</span></span>
+      <h2>Cada peça tem uma <span class="grad">justificativa técnica</span></h2>
+      <div class="stack">
+        <div class="tech"><div class="top"><svg class="icon ic"><use href="#i-cpu"/></svg><div><h4>ESP32</h4><div class="role">Edge Device</div></div></div><p>Dual-core com <b>Wi-Fi nativo</b> e baixo custo — processa a regra crítica localmente sem depender da nuvem.</p></div>
+        <div class="tech"><div class="top"><svg class="icon ic"><use href="#i-thermo"/></svg><div><h4>DHT22</h4><div class="role">Sensor</div></div></div><p>Temperatura <b>e</b> umidade em um só componente digital, faixa e precisão adequadas a ambiente de TI.</p></div>
+        <div class="tech"><div class="top"><svg class="icon ic"><use href="#i-radio"/></svg><div><h4>MQTT</h4><div class="role">Protocolo</div></div></div><p>Pub/Sub <b>leve e assíncrono</b>, projetado para IoT e redes instáveis — desacopla dispositivo e dashboard.</p></div>
+        <div class="tech"><div class="top"><svg class="icon ic"><use href="#i-cloud"/></svg><div><h4>Node-RED</h4><div class="role">Nuvem / UI</div></div></div><p>Orquestração <b>low-code</b> por fluxos e dashboard pronto para gauge, gráfico e botões de controle.</p></div>
+        <div class="tech"><div class="top"><svg class="icon ic"><use href="#i-code"/></svg><div><h4>ArduinoJson</h4><div class="role">Biblioteca</div></div></div><p>Serializa a telemetria em JSON <b>válido e enxuto</b>, garantindo integridade das chaves no transporte.</p></div>
+        <div class="tech"><div class="top"><svg class="icon ic"><use href="#i-send"/></svg><div><h4>PubSubClient</h4><div class="role">Biblioteca</div></div></div><p>Cliente MQTT para o ESP32: publica, <b>assina</b> comandos e reconecta automaticamente ao broker.</p></div>
+        <div class="tech"><div class="top"><svg class="icon ic"><use href="#i-server"/></svg><div><h4>Wokwi</h4><div class="role">Simulação</div></div></div><p>Simula ESP32 + DHT22 + LED, permitindo <b>demonstração reproduzível</b> sem hardware físico.</p></div>
+        <div class="tech"><div class="top"><svg class="icon ic"><use href="#i-cloud"/></svg><div><h4>HiveMQ</h4><div class="role">Broker MQTT</div></div></div><p>Broker público que <b>intermedia</b> as mensagens entre Edge e nuvem com autenticação por credenciais.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 7 · EDGE COMPUTING ===== -->
+  <section class="slide">
+    <div class="inner">
+      <span class="kicker">Tópico 04 <span class="n">— Inteligência na borda</span></span>
+      <h2>Edge Computing: <span class="grad">decidir sem esperar a nuvem</span></h2>
+      <div class="split">
+        <div>
+          <div class="feat"><span class="ico-badge" style="color:var(--green)"><svg class="icon"><use href="#i-zap"/></svg></span><div><h4>Acionamento autônomo</h4><p>Ao detectar <b>T &gt; 28 °C</b>, o ESP32 liga o exaustor de forma imediata, independente de qualquer comando da nuvem.</p></div></div>
+          <div class="feat"><span class="ico-badge" style="color:var(--cyan-2)"><svg class="icon"><use href="#i-refresh"/></svg></span><div><h4>Edge Continuity</h4><p>Se a conexão com o Node-RED cair, a proteção <b>continua funcionando localmente</b> — atende ao critério de Autonomia.</p></div></div>
+          <div class="feat"><span class="ico-badge" style="color:var(--violet)"><svg class="icon"><use href="#i-wind"/></svg></span><div><h4>Prioridade do crítico</h4><p>O gatilho automático tem prioridade sobre o comando manual: segurança térmica nunca é sobreposta.</p></div></div>
+        </div>
+        <pre class="code"><span class="c">// loop() — executado continuamente no ESP32</span>
+<span class="k">float</span> temperatura = dht.<span class="f">readTemperature</span>();
+
+<span class="c">// REGRA DE EDGE COMPUTING (autônoma)</span>
+<span class="k">if</span> (temperatura &gt; <span class="n">28.0</span>) {
+  <span class="f">digitalWrite</span>(LED_EXAUSTOR, HIGH); <span class="c">// liga sozinho</span>
+  Serial.<span class="f">println</span>(<span class="s">"ALERTA: modo automatico prioritario"</span>);
+}
+
+<span class="c">// Telemetria → nuvem (JSON enxuto)</span>
+doc[<span class="s">"temperatura"</span>] = temperatura;
+doc[<span class="s">"umidade"</span>]     = umidade;
+doc[<span class="s">"exaustor"</span>]    = <span class="f">digitalRead</span>(LED_EXAUSTOR) ? <span class="s">"ON"</span> : <span class="s">"OFF"</span>;
+client.<span class="f">publish</span>(<span class="s">"cloudtech/datacenter/monitor"</span>, jsonBuffer);</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 8 · DEMONSTRAÇÃO ===== -->
+  <section class="slide" id="demo">
+    <div class="inner">
+      <span class="kicker">Tópico 04 <span class="n">— Demonstração Prática (ao vivo)</span></span>
+      <h2 style="margin-bottom:4px">Dashboard reagindo <span class="grad">em tempo real</span></h2>
+      <p class="muted" style="font-size:13px;margin-bottom:8px"><b>Monitorar</b>: exibe os dados reais recebidos do broker (ESP32 ou outra pessoa publicando). <b>Inserir dados</b>: os sliders publicam temperatura/umidade de verdade no tópico — o FlowFuse acompanha.</p>
+      <div class="demo-bar">
+        <div class="seg">
+          <button id="mode-view" class="seg-btn is-on">● Monitorar</button>
+          <button id="mode-input" class="seg-btn">Inserir dados</button>
+          <button id="mode-sim" class="seg-btn">Simulação</button>
+        </div>
+        <span class="connstat" id="connstat"><span class="cdot"></span><span id="conn-txt">Conectando…</span></span>
+        <button id="d-exaustor-btn" class="exa-btn">Ativar Exaustor</button>
+        <a class="open-link" href="https://modern-great-knot-8644.flowfuse.cloud/ui/" target="_blank" rel="noopener">Dashboard FlowFuse ↗</a>
+      </div>
+      <div class="sliders" id="sliders" style="display:none">
+        <label class="sld">
+          <span class="sld-l"><svg class="icon"><use href="#i-thermo"/></svg> Temperatura <b id="sld-temp-v">24.0 °C</b></span>
+          <input type="range" id="sld-temp" min="10" max="40" step="0.5" value="24">
+        </label>
+        <label class="sld">
+          <span class="sld-l"><svg class="icon"><use href="#i-droplet"/></svg> Umidade <b id="sld-hum-v">55 %</b></span>
+          <input type="range" id="sld-hum" min="0" max="100" step="1" value="55">
+        </label>
+      </div>
+      <div class="dash">
+        <!-- Gauges: Temperatura + Umidade -->
+        <div class="panel gauges">
+          <div class="gauge-unit">
+            <div class="ptitle"><svg class="icon" style="font-size:13px;color:var(--cyan-2)"><use href="#i-thermo"/></svg> Temperatura</div>
+            <div class="gauge-wrap">
+              <svg viewBox="0 0 240 140" style="width:100%;max-width:330px">
+                <path id="g-track" fill="none" stroke="#eef1f4" stroke-width="18" stroke-linecap="round"/>
+                <path id="g-green" fill="none" stroke="#10b981" stroke-width="18"/>
+                <path id="g-amber" fill="none" stroke="#f59e0b" stroke-width="18"/>
+                <path id="g-red"   fill="none" stroke="#ef4444" stroke-width="18"/>
+                <g id="g-needle"><line x1="120" y1="128" x2="120" y2="44" stroke="#111827" stroke-width="4.5" stroke-linecap="round"/></g>
+                <circle cx="120" cy="128" r="8.5" fill="#111827"/>
+                <circle cx="120" cy="128" r="3.4" fill="#fff"/>
+                <text x="22" y="136" fill="#9ca3af" font-size="11" font-family="monospace" font-weight="bold">15°</text>
+                <text x="218" y="136" fill="#9ca3af" font-size="11" font-family="monospace" font-weight="bold" text-anchor="end">35°</text>
+              </svg>
+              <div class="readout">
+                <div class="t"><span id="d-temp">22.0</span><small>°C</small></div>
+                <div class="statuspill" id="d-status"><span class="dot"></span> <span>Operação ideal</span></div>
+              </div>
+            </div>
+            <div class="legend">
+              <span><i style="background:#10b981"></i>&lt;24</span>
+              <span><i style="background:#f59e0b"></i>24–28</span>
+              <span><i style="background:#ef4444"></i>&gt;28</span>
+            </div>
+          </div>
+          <div class="gauge-unit">
+            <div class="ptitle"><svg class="icon" style="font-size:13px;color:var(--cyan-2)"><use href="#i-droplet"/></svg> Umidade</div>
+            <div class="gauge-wrap">
+              <svg viewBox="0 0 240 140" style="width:100%;max-width:330px">
+                <path id="h-track" fill="none" stroke="#eef1f4" stroke-width="18" stroke-linecap="round"/>
+                <path id="h-dry"   fill="none" stroke="#f59e0b" stroke-width="18"/>
+                <path id="h-ideal" fill="none" stroke="#10b981" stroke-width="18"/>
+                <path id="h-humid" fill="none" stroke="#3b82f6" stroke-width="18"/>
+                <g id="h-needle"><line x1="120" y1="128" x2="120" y2="44" stroke="#111827" stroke-width="4.5" stroke-linecap="round"/></g>
+                <circle cx="120" cy="128" r="8.5" fill="#111827"/>
+                <circle cx="120" cy="128" r="3.4" fill="#fff"/>
+                <text x="22" y="136" fill="#9ca3af" font-size="11" font-family="monospace" font-weight="bold">0%</text>
+                <text x="218" y="136" fill="#9ca3af" font-size="11" font-family="monospace" font-weight="bold" text-anchor="end">100%</text>
+              </svg>
+              <div class="readout">
+                <div class="t"><span id="d-hum">55</span><small>%</small></div>
+                <div class="statuspill" id="d-hstatus"><span class="dot"></span> <span>Ideal</span></div>
+              </div>
+            </div>
+            <div class="legend">
+              <span><i style="background:#f59e0b"></i>&lt;40</span>
+              <span><i style="background:#10b981"></i>40–60</span>
+              <span><i style="background:#3b82f6"></i>&gt;60</span>
+            </div>
+          </div>
+        </div>
+        <!-- Right column -->
+        <div class="right-col">
+          <div class="ind-row" style="grid-template-columns:1fr">
+            <div class="ind"><div class="l"><svg class="icon"><use href="#i-wind"/></svg> Exaustor</div><div class="led"><span class="ledball" id="d-led"></span><span class="v" id="d-exaustor" style="font-size:20px">OFF</span></div></div>
+          </div>
+          <div class="panel chartbox">
+            <div class="ptitle"><svg class="icon" style="font-size:14px;color:var(--cyan-2)"><use href="#i-activity"/></svg> Histórico de temperatura</div>
+            <div class="chart-plot">
+              <svg viewBox="0 0 320 110" preserveAspectRatio="none">
+                <polygon id="c-area" fill="url(#cgrad)" opacity=".16" points=""/>
+                <line id="c-thr" x1="0" y1="34" x2="320" y2="34" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="5 4" opacity="0.55"/>
+                <polyline id="c-line" fill="none" stroke="#2563eb" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" points=""/>
+                <circle id="c-dot" r="3.6" fill="#2563eb"/>
+                <defs><linearGradient id="cgrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2563eb"/><stop offset="1" stop-color="transparent"/></linearGradient></defs>
+              </svg>
+              <span class="thr-tag" id="c-thr-lbl">28 °C</span>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="ptitle"><svg class="icon" style="font-size:14px;color:var(--cyan-2)"><use href="#i-bell"/></svg> Log de eventos</div>
+            <div class="log" id="d-log"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 9 · SEGURANÇA & ESCALABILIDADE ===== -->
+  <section class="slide">
+    <div class="inner">
+      <span class="kicker">Tópico 05 <span class="n">— Segurança &amp; Escalabilidade</span></span>
+      <h2>Seguro hoje, <span class="grad">pronto para escalar amanhã</span></h2>
+      <div class="twocol">
+        <div class="col card">
+          <h3><span class="ico-badge"><svg class="icon"><use href="#i-shield"/></svg></span> Segurança implementada</h3>
+          <div class="li"><svg class="icon"><use href="#i-lock"/></svg><div><b>Autenticação no broker</b><p>Conexão MQTT exige <b>usuário e senha</b> obrigatórios — sem credencial, sem acesso.</p></div></div>
+          <div class="li"><svg class="icon"><use href="#i-layers"/></svg><div><b>Tópicos namespaced</b><p><code class="mono" style="color:var(--cyan-2)">cloudtech/datacenter/*</code> isola o domínio da aplicação.</p></div></div>
+          <div class="li"><svg class="icon"><use href="#i-check"/></svg><div><b>Validação de payload</b><p>JSON estruturado com chaves fixas evita comandos e dados malformados.</p></div></div>
+          <div class="li"><svg class="icon"><use href="#i-refresh"/></svg><div><b>Reconexão resiliente</b><p>Reassinatura automática do tópico de comando a cada reconexão.</p></div></div>
+        </div>
+        <div class="col scl card">
+          <h3><span class="ico-badge" style="color:var(--violet)"><svg class="icon"><use href="#i-trend"/></svg></span> Evolução para indústria</h3>
+          <div class="li"><svg class="icon"><use href="#i-lock"/></svg><div><b>TLS/SSL (porta 8883)</b><p>Criptografia ponta a ponta + ACL por tópico e gestão de segredos.</p></div></div>
+          <div class="li"><svg class="icon"><use href="#i-db"/></svg><div><b>Persistência time-series</b><p>InfluxDB + Grafana para histórico longo e análise de tendências.</p></div></div>
+          <div class="li"><svg class="icon"><use href="#i-grid"/></svg><div><b>Multi-rack / multi-site</b><p>Tópico por unidade e fila escalável (HiveMQ Cloud, AWS IoT Core).</p></div></div>
+          <div class="li"><svg class="icon"><use href="#i-bell"/></svg><div><b>Alertas &amp; OTA</b><p>Notificações (e-mail/Telegram), Last Will Testament e atualização remota de firmware.</p></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 10 · CRITÉRIOS ===== -->
+  <section class="slide">
+    <div class="inner">
+      <span class="kicker">Validação <span class="n">— Critérios de avaliação atendidos</span></span>
+      <h2>Aprovado nos <span class="grad">quatro testes práticos</span></h2>
+      <div class="crit">
+        <div class="c"><svg class="icon check"><use href="#i-check"/></svg><svg class="icon ic"><use href="#i-wifi"/></svg><h4>Conectividade</h4><p>Wi-Fi + Broker MQTT estabelecidos em <b>&lt; 10 s</b>.</p></div>
+        <div class="c"><svg class="icon check"><use href="#i-check"/></svg><svg class="icon ic"><use href="#i-code"/></svg><h4>Integridade</h4><p>JSON válido com as chaves exatas que o Node-RED espera.</p></div>
+        <div class="c"><svg class="icon check"><use href="#i-check"/></svg><svg class="icon ic"><use href="#i-zap"/></svg><h4>Resiliência</h4><p>Comando manual liga o LED de forma <b>instantânea</b>.</p></div>
+        <div class="c"><svg class="icon check"><use href="#i-check"/></svg><svg class="icon ic"><use href="#i-refresh"/></svg><h4>Autonomia</h4><p>Sem nuvem, o ESP32 ainda aciona o LED a <b>&gt; 28 °C</b>.</p></div>
+      </div>
+      <p class="muted" style="font-size:13px;margin-top:24px;display:flex;gap:9px;align-items:center"><svg class="icon" style="font-size:16px;color:var(--cyan-2)"><use href="#i-thermo"/></svg> Indicador analógico com mapeamento cromático: <span class="pill g">Verde &lt; 24°</span> <span class="pill a">Amarelo 24–28°</span> <span class="pill r">Vermelho &gt; 28°</span></p>
+    </div>
+  </section>
+
+  <!-- ===== 11 · ENCERRAMENTO ===== -->
+  <section class="slide closing">
+    <div class="inner">
+      <span class="kicker" style="justify-content:center">Encerramento</span>
+      <h1>De <span style="color:var(--red)">4 horas</span> de downtime<br>a <span class="grad">zero surpresas</span></h1>
+      <div class="impact">
+        <div class="b"><div class="v" style="color:var(--red)">4h</div><div class="l">downtime ANTES</div></div>
+        <svg class="icon ar"><use href="#i-arrow"/></svg>
+        <div class="b"><div class="v" style="color:var(--green)">&lt; 5 s</div><div class="l">resposta DEPOIS</div></div>
+        <svg class="icon ar"><use href="#i-arrow"/></svg>
+        <div class="b"><div class="v grad">24/7</div><div class="l">monitorado</div></div>
+      </div>
+      <p class="lead" style="margin:0 auto">Monitoramento inteligente que une <b>Edge Computing</b> e <b>Cloud</b> para proteger a infraestrutura crítica — autônomo, seguro e escalável.</p>
+      <div style="margin-top:30px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <span class="chip"><svg class="icon"><use href="#i-cpu"/></svg> ESP32</span>
+        <span class="chip"><svg class="icon"><use href="#i-radio"/></svg> MQTT</span>
+        <span class="chip"><svg class="icon"><use href="#i-cloud"/></svg> Node-RED</span>
+        <span class="chip"><svg class="icon"><use href="#i-server"/></svg> Wokwi</span>
+      </div>
+      <p class="faint" style="margin-top:27px;font-family:var(--mono);font-size:13px">Obrigado! · Perguntas &amp; Demonstração ao vivo &nbsp;·&nbsp; CloudTech Solutions</p>
+    </div>
+  </section>
+
+</div>
+
+<!-- ============ HUD ============ -->
+<footer class="hud">
+  <div class="hud__nav">
+    <button class="navbtn" id="prev" aria-label="Anterior">‹</button>
+    <span class="counter"><b id="cur">01</b> / <span id="tot">11</span></span>
+    <button class="navbtn" id="next" aria-label="Próximo">›</button>
+  </div>
+</footer>
+
+<!-- MQTT sobre WebSocket — dados reais do broker (arquivo local; cai para CDN se ausente) -->
+<script src="mqtt.min.js" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/mqtt@5/dist/mqtt.min.js';document.head.appendChild(s);"></script>
+
+<script>
+(function(){
+  "use strict";
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const pbar = document.getElementById('pbar');
+  const cur  = document.getElementById('cur');
+  document.getElementById('tot').textContent = String(slides.length).padStart(2,'0');
+  let idx = 0;
+
+  function render(){
+    slides.forEach((s,i)=>{ s.classList.toggle('is-active', i===idx); s.classList.toggle('is-prev', i<idx); });
+    pbar.style.width = (idx/(slides.length-1)*100) + '%';
+    cur.textContent = String(idx+1).padStart(2,'0');
+    slides[idx].id === 'demo' ? Demo.start() : Demo.stop();
+  }
+  function go(n){ idx = Math.max(0, Math.min(slides.length-1, n)); render(); }
+  const next = ()=>go(idx+1), prev = ()=>go(idx-1);
+
+  document.getElementById('next').onclick = next;
+  document.getElementById('prev').onclick = prev;
+
+  window.addEventListener('keydown', e=>{
+    if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '||e.key==='Enter'){ e.preventDefault(); next(); }
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){ e.preventDefault(); prev(); }
+    else if(e.key==='Home'){ go(0); }
+    else if(e.key==='End'){ go(slides.length-1); }
+    else if(e.key==='f'||e.key==='F'){ if(!document.fullscreenElement) document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.(); }
+  });
+  // touch swipe
+  let tx=0;
+  addEventListener('touchstart',e=>tx=e.changedTouches[0].clientX,{passive:true});
+  addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx; if(Math.abs(dx)>50)(dx<0?next:prev)();},{passive:true});
+
+  /* ===== Live dashboard demo ===== */
+  const Demo = (function(){
+    const cx=120, cy=128, R=96;
+    const F = t => Math.max(0, Math.min(1, (t-15)/20));     // temp → fraction [0..1]
+    const Fh = h => Math.max(0, Math.min(1, h/100));        // umidade 0..100% → [0..1]
+    const pt = (f,r)=>[cx - r*Math.cos(f*Math.PI), cy - r*Math.sin(f*Math.PI)];
+    const arc = (f1,f2,r)=>{const a=pt(f1,r),b=pt(f2,r);return `M ${a[0].toFixed(1)} ${a[1].toFixed(1)} A ${r} ${r} 0 0 1 ${b[0].toFixed(1)} ${b[1].toFixed(1)}`;};
+
+    // build static gauge arcs once
+    let built=false;
+    function build(){
+      if(built) return; built=true;
+      document.getElementById('g-track').setAttribute('d', arc(0,1,R));
+      document.getElementById('g-green').setAttribute('d', arc(0,F(24),R));
+      document.getElementById('g-amber').setAttribute('d', arc(F(24),F(28),R));
+      document.getElementById('g-red').setAttribute('d',   arc(F(28),1,R));
+      const ht=document.getElementById('h-track');
+      if(ht){
+        ht.setAttribute('d', arc(0,1,R));
+        document.getElementById('h-dry').setAttribute('d',   arc(0,0.40,R));
+        document.getElementById('h-ideal').setAttribute('d', arc(0.40,0.60,R));
+        document.getElementById('h-humid').setAttribute('d', arc(0.60,1,R));
+      }
+    }
+
+    const el = {};
+    function cache(){ ['d-temp','d-hum','d-exaustor','d-led','d-status','d-hstatus','g-needle','h-needle','c-line','c-area','c-dot','c-thr','c-thr-lbl','d-log','d-exaustor-btn','connstat','conn-txt','sliders','sld-temp','sld-hum','sld-temp-v','sld-hum-v']
+      .forEach(id=> el[id]=document.getElementById(id)); }
+
+    let timer=null, tick=0, phase=1.1, temp=22, hist=[], exaState=false, simManual=false;
+    let mode='view', client=null, connected=false, gotData=false, wired=false, connRetries=0;
+    // === Ajuste aqui se o seu ESP32/Node-RED usar outro broker/tópicos ===
+    const BROKER='wss://broker.hivemq.com:8884/mqtt';
+    const T_MON='cloudtech/datacenter/monitor', T_CMD='cloudtech/datacenter/cmd';
+
+    function setStatus(t){
+      const pill = el['d-status'], dot = pill.querySelector('.dot'), txt = pill.querySelector('span:last-child');
+      let c,label;
+      if(t>28){ c='var(--red)'; label='Crítico · acionamento'; }
+      else if(t>=24){ c='var(--amber)'; label='Alerta'; }
+      else { c='var(--green)'; label='Operação ideal'; }
+      dot.style.background=c; dot.style.boxShadow='0 0 10px '+c;
+      pill.style.borderColor=c; pill.style.color=c; txt.textContent=label;
+    }
+    function setHStatus(h){
+      const pill = el['d-hstatus']; if(!pill) return;
+      const dot = pill.querySelector('.dot'), txt = pill.querySelector('span:last-child');
+      let c,label;
+      if(h<40){ c='var(--amber)'; label='Seco'; }
+      else if(h<=60){ c='var(--green)'; label='Ideal'; }
+      else { c='var(--cyan-2)'; label='Úmido'; }
+      if(dot){ dot.style.background=c; dot.style.boxShadow='0 0 10px '+c; }
+      pill.style.borderColor=c; pill.style.color=c; if(txt) txt.textContent=label;
+    }
+    function log(cls, msg){
+      const row=document.createElement('div');
+      row.className='row '+cls;
+      const now=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      row.innerHTML=`<time>${now}</time><span><b>${msg}</b></span>`;
+      el['d-log'].prepend(row);
+      while(el['d-log'].children.length>5) el['d-log'].lastChild.remove();
+    }
+    function drawChart(){
+      const n=hist.length; if(n<1) return;
+      const W=320, top=12, bot=98;                 // banda de desenho (viewBox 0..110)
+      let lo=28, hi=28;
+      for(const v of hist){ if(v<lo) lo=v; if(v>hi) hi=v; }
+      if(hi-lo < 8){ const m=(hi+lo)/2; lo=m-4; hi=m+4; }   // span mínimo p/ não achatar
+      const pad=(hi-lo)*0.12; lo-=pad; hi+=pad;             // respiro acima/abaixo
+      const yOf=v=> bot - ((v-lo)/(hi-lo))*(bot-top);
+      const xOf=i=> n>1 ? (i/(n-1))*W : W/2;
+      const pts=hist.map((t,i)=>[xOf(i).toFixed(1), yOf(t).toFixed(1)]);
+      const pstr=pts.map(p=>p.join(',')).join(' ');
+      el['c-line'].setAttribute('points', pstr);
+      el['c-area'].setAttribute('points', `0,110 ${pstr} ${W},110`);
+      const last=pts[pts.length-1];
+      el['c-dot'].setAttribute('cx',last[0]); el['c-dot'].setAttribute('cy',last[1]);
+      const yT=yOf(28);                            // limiar 28°C (acompanha a escala)
+      if(el['c-thr']){ el['c-thr'].setAttribute('y1', yT.toFixed(1)); el['c-thr'].setAttribute('y2', yT.toFixed(1)); }
+      if(el['c-thr-lbl']){ el['c-thr-lbl'].style.top = yT.toFixed(1)+'px'; el['c-thr-lbl'].style.opacity = (yT<8||yT>104)?'0':'1'; }
+    }
+    function frame(){
+      tick++; phase+=0.045;
+      const target = 25.8 + 5.4*Math.sin(phase) + (((tick*37)%13)-6)/22;  // ~20.4..31.2
+      temp += (target-temp)*0.16;
+      // estado do exaustor: automático >28°C, histerese <27°C, ou comando manual
+      let on = exaState;
+      if(temp>28) on=true; else if(simManual) on=true; else if(temp<27) on=false;
+      const hum = Math.max(38, Math.min(72, 60 - (temp-26)*1.6 + (((tick*23)%9)-4)/3));
+      if(tick%4===0) paintReading(temp, hum, on); else lightUpdate(temp, hum, on);
+    }
+
+    // ---- atualização dos widgets (usada pela simulação e pelo MQTT real) ----
+    function lightUpdate(t, hum, on){
+      if(!el['d-temp']) cache(); build();
+      el['d-temp'].textContent = (Math.round(t*10)/10).toFixed(1);
+      el['d-temp'].style.color = t>28?'#ef4444':t>=24?'#f59e0b':'#10b981';
+      el['g-needle'].setAttribute('transform', `rotate(${(F(t)*180-90).toFixed(1)} ${cx} ${cy})`);
+      setStatus(t);
+      if(hum!=null && !isNaN(hum)){
+        el['d-hum'].textContent = Math.round(hum);
+        if(el['h-needle']) el['h-needle'].setAttribute('transform', `rotate(${(Fh(hum)*180-90).toFixed(1)} ${cx} ${cy})`);
+        setHStatus(hum);
+      }
+      if(on!=null) setExaustor(!!on, false);
+    }
+    function paintReading(t, hum, on){ lightUpdate(t, hum, on); hist.push(t); if(hist.length>34) hist.shift(); drawChart(); }
+
+    function syncBtn(){
+      const b=el['d-exaustor-btn']; if(!b) return;
+      b.textContent = exaState ? 'Desligar Exaustor' : 'Ativar Exaustor';
+      b.classList.toggle('on', exaState);
+    }
+    function setExaustor(on, fromCmd){
+      on=!!on;
+      if(on!==exaState){
+        exaState=on;
+        el['d-led'].classList.toggle('on', on);
+        el['d-exaustor'].textContent = on?'ON':'OFF';
+        el['d-exaustor'].style.color = on?'#ef4444':'';
+        if(!fromCmd) log(on?'auto':'ok', on ? 'Exaustor LIGADO automaticamente' : 'Exaustor desligado');
+      }
+      syncBtn();
+    }
+
+    // ---- status de conexão ----
+    function setConn(state){
+      const c=el['connstat']; if(!c) return;
+      const map={connecting:['var(--amber)','Conectando…'],waiting:['var(--amber)','Conectado · aguardando dados'],online:['var(--green)','Ao vivo'],publishing:['var(--green)','● Publicando no broker'],offline:['var(--red)','Sem conexão (modo local)']};
+      const v=map[state]||map.offline;
+      c.style.color=v[0]; c.style.borderColor=v[0];
+      const d=c.querySelector('.cdot'); if(d) d.style.background=v[0];
+      if(el['conn-txt']) el['conn-txt'].textContent=v[1];
+    }
+
+    // ---- conexão MQTT (WebSocket) ----
+    function connect(){
+      if(client) return;
+      if(!window.mqtt){ setConn('connecting'); if(connRetries<6){ connRetries++; setTimeout(connect,1200); } else { setConn('offline'); log('auto','Biblioteca MQTT indisponível — verifique a internet ou use Simulação'); } return; }
+      setConn('connecting'); log('man','Conectando ao broker MQTT…');
+      try{ client = window.mqtt.connect(BROKER,{clientId:'webdash-'+Math.random().toString(16).slice(2,8),clean:true,connectTimeout:8000,reconnectPeriod:5000}); }
+      catch(e){ setConn('offline'); return; }
+      client.on('connect', ()=>{ connected=true; client.subscribe(T_MON); setConn(mode==='input'?'publishing':'online'); log('ok','Broker conectado'); });
+      client.on('reconnect', ()=> setConn('connecting'));
+      client.on('close',     ()=>{ connected=false; setConn('offline'); });
+      client.on('error',     ()=> setConn('offline'));
+      client.on('message', (topic,payload)=>{
+        if(topic!==T_MON) return;
+        gotData=true;
+        if(mode!=='view') return;          // só o modo Monitorar exibe a telemetria externa
+        setConn('online');
+        try{
+          const d=JSON.parse(payload.toString());
+          const t=parseFloat(d.temperatura), h=parseFloat(d.umidade);
+          const on=/^(on|1|true|ligado)$/i.test(String(d.exaustor).trim());
+          if(!isNaN(t)) paintReading(t, isNaN(h)?null:h, on);
+        }catch(_){}
+      });
+    }
+    function sendCmd(){
+      const cmd = exaState ? 'OFF' : 'ON';
+      simManual = (cmd==='ON');
+      setExaustor(cmd==='ON', true);
+      if(mode==='view'){
+        if(client && connected){ client.publish(T_CMD, cmd); log('man','Comando enviado ao dispositivo → '+cmd); }
+        else log('auto','Sem conexão — comando não enviado');
+      }else if(mode==='input'){
+        publishReading(); log('man','Exaustor (entrada de dados) → '+cmd);
+      }else{
+        log('man','Comando manual (simulação) → '+cmd);
+      }
+    }
+
+    // ---- modo SIMULAÇÃO ----
+    function startSim(){ build(); if(!el['d-temp']) cache(); if(timer) return; if(!hist.length) hist=[22,22.4,23]; log('man','Modo SIMULAÇÃO ativo'); timer=setInterval(frame,150); }
+    function stopSim(){ if(timer){ clearInterval(timer); timer=null; } }
+    // ---- modo MONITORAR (apenas exibe os dados reais do broker) ----
+    function startView(){ build(); if(!el['d-temp']) cache(); connect(); if(client && connected) setConn('online'); log('man','Modo MONITORAR — exibindo dados reais recebidos do broker'); }
+    // ---- modo INSERIR DADOS (sliders publicam telemetria real) ----
+    function updateSliderLabels(){
+      if(el['sld-temp-v'] && el['sld-temp']) el['sld-temp-v'].textContent = (+el['sld-temp'].value).toFixed(1)+' °C';
+      if(el['sld-hum-v']  && el['sld-hum'])  el['sld-hum-v'].textContent  = Math.round(+el['sld-hum'].value)+' %';
+    }
+    function publishReading(){          // publica os valores dos sliders como telemetria REAL
+      if(!(client && connected)) return false;
+      const t=Math.round((+el['sld-temp'].value)*10)/10, h=Math.round(+el['sld-hum'].value);
+      const on=((+el['sld-temp'].value)>28)||simManual;
+      client.publish(T_MON, JSON.stringify({temperatura:t, umidade:h, exaustor:on?'ON':'OFF'}));
+      setConn('publishing');
+      return true;
+    }
+    function sliderTick(){    // feedback local imediato ao arrastar o slider
+      if(!el['sld-temp']) return;
+      const t=+el['sld-temp'].value, h=+el['sld-hum'].value;
+      lightUpdate(t, h, (t>28)||simManual);
+    }
+    function inputTick(){     // 600ms no modo Inserir: publica (online) e desenha localmente
+      if(!el['sld-temp']) return;
+      const t=+el['sld-temp'].value, h=+el['sld-hum'].value;
+      if(client && connected) publishReading();
+      else paintReading(t, h, (t>28)||simManual);
+    }
+    function startInput(){ build(); if(!el['d-temp']) cache(); updateSliderLabels(); connect(); if(!hist.length){ const t=+(el['sld-temp']?el['sld-temp'].value:24); hist=[t,t,t]; } sliderTick(); log('man','Modo INSERIR DADOS — os sliders publicam em '+T_MON); if(timer) return; timer=setInterval(inputTick,600); }
+    function setMode(m){
+      if(m===mode) return;
+      mode=m; simManual=false;
+      ['view','input','sim'].forEach(mm=>{ const b=document.getElementById('mode-'+mm); if(b) b.classList.toggle('is-on', m===mm); });
+      if(el['connstat']) el['connstat'].style.display=(m==='view'||m==='input')?'':'none';
+      if(el['sliders'])  el['sliders'].style.display=(m==='input')?'flex':'none';
+      stopSim();
+      hist=[]; if(el['d-log']) el['d-log'].innerHTML='';
+      if(m==='view'){ startView(); }
+      else if(m==='input'){ startInput(); }
+      else { startSim(); }
+    }
+    function wire(){
+      if(wired) return; wired=true; cache();
+      if(el['d-exaustor-btn']) el['d-exaustor-btn'].onclick=sendCmd;
+      ['view','input','sim'].forEach(mm=>{ const b=document.getElementById('mode-'+mm); if(b) b.onclick=()=>setMode(mm); });
+      const onSld=()=>{ updateSliderLabels(); sliderTick(); };
+      const onSldDone=()=>{ if(mode==='input') publishReading(); };
+      if(el['sld-temp']){ el['sld-temp'].addEventListener('input', onSld); el['sld-temp'].addEventListener('change', onSldDone); }
+      if(el['sld-hum']){ el['sld-hum'].addEventListener('input', onSld); el['sld-hum'].addEventListener('change', onSldDone); }
+      updateSliderLabels(); syncBtn();
+    }
+
+    return {
+      start(){
+        build(); wire();
+        if(el['connstat']) el['connstat'].style.display=(mode==='view'||mode==='input')?'':'none';
+        if(el['sliders'])  el['sliders'].style.display=(mode==='input')?'flex':'none';
+        if(mode==='view'){ startView(); } else if(mode==='input'){ startInput(); } else { startSim(); }
+      },
+      stop(){ stopSim(); }   // mantém a conexão MQTT viva ao sair do slide
+    };
+  })();
+
+  render();
+})();
+</script>
+</body>
+</html>
